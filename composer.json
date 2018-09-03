@@ -1,0 +1,32 @@
+{
+    "name": "timmit/console",
+    "description": "Lightweight utility and helper classes for CLI applications",
+    "keywords": [
+        "cli",
+        "console"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nofriandi Ramenta",
+            "email": "nramenta@gmail.com",
+            "role": "author of original source"
+        },
+        {
+            "name": "Tim Schoondergang",
+            "email": "Tim.Schoondergang@TiMMiT.nl",
+            "homepage": "http://www.TiMMiT.nl"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "ext-pcntl": "*",
+        "ext-posix": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "TiMMiT\\": "src/TiMMiT/"
+        }
+    }
+}
