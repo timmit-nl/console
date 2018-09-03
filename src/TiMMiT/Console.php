@@ -224,12 +224,14 @@ class Console {
 	 * @return int|false Number of bytes printed or false on error
 	 */
 	public static function stdout($text, $raw = false) {
-		if ($raw) {
-			return fwrite(STDOUT, $text);
-		} elseif (extension_loaded('posix') && posix_isatty(STDOUT)) {
-			return fwrite(STDOUT, static::colorize($text));
-		} else {
-			return fwrite(STDOUT, static::decolorize($text));
+		if(is_resource(STDOUT)){
+			if ($raw) {
+				return fwrite(STDOUT, $text);
+			} elseif (extension_loaded('posix') && posix_isatty(STDOUT)){
+				return fwrite(STDOUT, static::colorize($text));
+			} else {
+				return fwrite(STDOUT, static::decolorize($text));
+			}
 		}
 	}
 
