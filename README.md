@@ -50,7 +50,7 @@ to TTY or to a file.
 
 ```php
 <?php
-use Clio\Console;
+use TiMMiT\Console;
 Console::stdout('Hello, World!');
 ```
 
