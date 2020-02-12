@@ -301,6 +301,7 @@ class Console {
 			$input = static::input("$text: ");
 		}
 
+		$error = false;
 		if (!strlen($input)) {
 			if (isset($options['default'])) {
 				$input = $options['default'];
@@ -313,7 +314,7 @@ class Console {
 			goto top;
 		} elseif ($options['validator'] &&
 			!call_user_func_array($options['validator'], array($input, &$error))) {
-			static::output(isset($error) ? $error : $options['error']);
+			static::output($error!==false ? $error : $options['error']);
 			goto top;
 		}
 
@@ -402,7 +403,7 @@ class Console {
 			$done   = false;
 			$retval = 0;
 			pcntl_signal(SIGCHLD, function() use ($pid, &$done, &$retval) {
-				$child_pid = pcntl_waitpid($pid, $status);
+				$child_pid = pcntl_waitpid($pid, $status,0);
 				if (pcntl_wifexited($status)) {
 					$retval = pcntl_wexitstatus($status);
 				}
