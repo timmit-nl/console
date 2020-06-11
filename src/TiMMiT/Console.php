@@ -221,7 +221,7 @@ class Console {
 	 * @param string $text String to write to STDOUT
 	 * @param bool   $raw  Write string as-is; defaults to false
 	 *
-	 * @return int|false Number of bytes printed or false on error
+	 * @return int|void Number of bytes printed or false on error
 	 */
 	public static function stdout($text, $raw = false) {
 		if(is_resource(STDOUT)){
@@ -389,6 +389,7 @@ class Console {
 		$func = new \ReflectionFunction($callable);
 
 		$socket = (bool)$func->getNumberOfParameters();
+		$sockets = array();
 
 		if ($socket) {
 			$sockets = array();
