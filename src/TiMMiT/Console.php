@@ -2,6 +2,9 @@
 
 namespace TiMMiT;
 
+/**
+ * De Console class
+ */
 class Console
 {
     /**
@@ -152,6 +155,7 @@ class Console
      * colorcodes will just be removed (And %% will be transformed into %)
      *
      * @param string $text String to color
+     * @param bool $color color it
      *
      * @return string
      */
