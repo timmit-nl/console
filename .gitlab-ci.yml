@@ -9,7 +9,7 @@ PHP static:
   - curl -sS https://getcomposer.org/installer | php
   - php composer.phar config -g cache-dir "$(pwd)/.composer-cache"
   - php composer.phar install --ignore-platform-reqs --no-dev --optimize-autoloader --no-ansi --no-interaction --no-progress
-  - touch app/CI
+  - touch ./CI
   script:
   - sh test/phpstan.sh | tee phpstan_results.txt
   - EXIT_CODE=$?
@@ -38,7 +38,7 @@ PHP docblocks:
   - curl -sS https://getcomposer.org/installer | php
   - php composer.phar config -g cache-dir "$(pwd)/.composer-cache"
   - php composer.phar install --ignore-platform-reqs --no-dev --optimize-autoloader --no-ansi --no-interaction --no-progress
-  - touch app/CI
+  - touch ./CI
   script:
   - sh test/phpdoc.sh | tee phpdoc_results.txt
   - EXIT_CODE=$?

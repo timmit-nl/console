@@ -1,5 +1,5 @@
 #!/bin/sh
-FILE=app/CI
+FILE=./CI
 if [ -f "$FILE" ]; then
 	PHPOPTIONS=""
 	echo CI
