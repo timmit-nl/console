@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * A very simple class for using Console.
+ *
+ * PHP version 7.4+
+ *
+ * @package TiMMiT/Console
+ * @author  Tim Schoondergang <tim.schoondergang@TiMMiT.nl>
+ */
+
 namespace TiMMiT;
 
 /**
@@ -8,7 +17,7 @@ namespace TiMMiT;
 class Console
 {
     /**
-     * Text foreground colors.
+     * @var int[] $FGCOLOR Text foreground colors.
      */
     protected static $FGCOLOR = array(
         'black'  => 30,
@@ -23,7 +32,7 @@ class Console
     );
 
     /**
-     * Text styling.
+     * @var int[] $STYLE Text styling.
      */
     protected static $STYLE = array(
         'normal'     => 0,
@@ -38,7 +47,7 @@ class Console
     );
 
     /**
-     * Text background color.
+     * @var int[] $BGCOLOR Text background color.
      */
     protected static $BGCOLOR = array(
         'black'  => 40,
@@ -53,7 +62,7 @@ class Console
     );
 
     /**
-     * Color specifier conversion table. Taken from PEAR's Console_Color.
+     * @var mixed[] $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
      */
     protected static $CONVERSIONS = array(
         '%y' => array('yellow', null, null),
@@ -102,7 +111,7 @@ class Console
      *
      * @return string ANSI-control code
      */
-    public static function color($fgcolor, $style, $bgcolor)
+    public static function color(string $fgcolor, string $style, string $bgcolor): string
     {
         $code = array();
         if ($fgcolor == 'reset') {
@@ -159,7 +168,7 @@ class Console
      *
      * @return string
      */
-    public static function colorize($text, $color = true)
+    public static function colorize(string $text, bool $color = true): string
     {
         $text = str_replace('%%', '% ', $text);
         foreach (static::$CONVERSIONS as $key => $value) {
@@ -180,7 +189,7 @@ class Console
      *
      * @return string
      */
-    public static function decolorize($text)
+    public static function decolorize(string $text): string
     {
         return static::colorize($text, false);
     }
@@ -192,7 +201,7 @@ class Console
      *
      * @return string
      */
-    public static function strip($text)
+    public static function strip(string $text): string
     {
         return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text);
     }
@@ -202,9 +211,9 @@ class Console
      *
      * @param bool $raw If set to true, returns the raw string without trimming
      *
-     * @return string
+     * @return string|null
      */
-    public static function stdin($raw = false)
+    public static function stdin(bool $raw = false): ?string
     {
         if (defined('DAEMON_STDIN')) {
             $stdin = constant('DAEMON_STDIN');
@@ -212,10 +221,13 @@ class Console
             $stdin = STDIN;
         }
         $input = fgets($stdin);
-        if (!$raw) {
-            $input = rtrim($input, PHP_EOL);
+        if (is_string($input)) {
+            if (!$raw) {
+                $input = rtrim($input, PHP_EOL);
+            }
+            return $input;
         }
-        return $input;
+        return null;
     }
 
     /**
@@ -225,9 +237,9 @@ class Console
      * @param string $prompt String prompt (optional)
      * @param bool   $raw    If set to true, returns the raw string without trimming
      *
-     * @return string User input
+     * @return string|null User input
      */
-    public static function input($prompt = null, $raw = false)
+    public static function input(?string $prompt = null, bool $raw = false): ?string
     {
         if (isset($prompt)) {
             static::stdout($prompt);
@@ -241,9 +253,9 @@ class Console
      * @param string $text String to write to STDOUT
      * @param bool   $raw  Write string as-is; defaults to false
      *
-     * @return int|void Number of bytes printed or false on error
+     * @return int|null Number of bytes printed or false on error
      */
-    public static function stdout($text, $raw = false)
+    public static function stdout(string $text, bool $raw = false): ?int
     {
         if (defined('DAEMON_STDOUT')) {
             $stdout = constant('DAEMON_STDOUT');
@@ -252,13 +264,17 @@ class Console
         }
         if (is_resource($stdout)) {
             if ($raw) {
-                return fwrite($stdout, $text);
+                $return = fwrite($stdout, $text);
             } elseif (extension_loaded('posix') && posix_isatty($stdout)) {
-                return fwrite($stdout, static::colorize($text));
+                $return = fwrite($stdout, static::colorize($text));
             } else {
-                return fwrite($stdout, static::decolorize($text));
+                $return = fwrite($stdout, static::decolorize($text));
+            }
+            if ($return !== false) {
+                return $return;
             }
         }
+        return null;
     }
 
     /**
@@ -280,9 +296,9 @@ class Console
      * @param string $text String to write to STDERR
      * @param bool   $raw  Write string as-is; defaults to false
      *
-     * @return int|false Number of bytes printed or false on error
+     * @return int|null Number of bytes printed or false on error
      */
-    public static function stderr($text, $raw = false)
+    public static function stderr(string $text, bool $raw = false): ?int
     {
         if (defined('DAEMON_STDERR')) {
             $stderr = constant('DAEMON_STDERR');
@@ -290,23 +306,27 @@ class Console
             $stderr = STDERR;
         }
         if ($raw) {
-            return fwrite($stderr, $text);
+            $return = fwrite($stderr, $text);
         } elseif (extension_loaded('posix') && posix_isatty($stderr)) {
-            return fwrite($stderr, static::colorize($text));
+            $return = fwrite($stderr, static::colorize($text));
         } else {
-            return fwrite($stderr, static::decolorize($text));
+            $return = fwrite($stderr, static::decolorize($text));
         }
+        if ($return !== false) {
+            return $return;
+        }
+        return null;
     }
 
     /**
      * Prints text to STDERR appended with a PHP_EOL.
      *
-     * @param string $text String to write to STDERR
+     * @param string|null $text String to write to STDERR
      * @param bool   $raw  Write string as-is; defaults to false
      *
      * @return int|false Number of bytes printed or false on error
      */
-    public static function error($text = null, $raw = false)
+    public static function error(?string $text = null, bool $raw = false): ?int
     {
         return static::stderr($text . PHP_EOL, $raw);
     }
@@ -319,7 +339,7 @@ class Console
      *
      * @return string
      */
-    public static function prompt($text, $options = array())
+    public static function prompt(string $text, array $options = array()): string
     {
         $options = $options + array(
             'required'  => false,
@@ -367,14 +387,17 @@ class Console
      *
      * @return bool Either true or false
      */
-    public static function confirm($text)
+    public static function confirm(string $text): bool
     {
         top:
         $input = strtolower(static::input("$text [y/n]: "));
         if (!in_array($input, array('y', 'n'))) {
             goto top;
         }
-        return $input === 'y' ? true : false;
+        if ($input === 'y') {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -386,7 +409,7 @@ class Console
      *
      * @return string An option character the user chose
      */
-    public static function select($text, $options = array())
+    public static function select(string $text, array $options = array()): string
     {
         top:
         static::stdout("$text [" . implode(',', array_keys($options)) . ",?]: ");
@@ -409,16 +432,16 @@ class Console
      * periodically sent from the background process, depending on whether the
      * provided Closure object has a $socket parameter or not. Messaging to the
      * main process is done by socket_* functions. The return value is either
-     * the return value of the background process, or false if the process fork
+     * the return value of the background process, or null if the process fork
      * failed.
-     *
-     * @throws \Exception
      *
      * @param callable $callable Closure object
      *
-     * @return int|false Process exit status
+     * @return int|null Process exit status
+     *
+     * @throws \Exception If extensions aren't loaded.
      */
-    public static function work(callable $callable)
+    public static function work(callable $callable): ?int
     {
         if (!extension_loaded('pcntl')) {
             throw new \Exception('pcntl extension required');
@@ -441,7 +464,7 @@ class Console
         if ($socket) {
             $sockets = array();
             if (socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $sockets) === false) {
-                return false;
+                return null;
             }
         }
 
@@ -505,7 +528,7 @@ class Console
             exit;
         } else {
             // Unable to fork process.
-            return false;
+            return null;
         }
     }
 }
