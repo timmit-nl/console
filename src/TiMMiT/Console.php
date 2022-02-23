@@ -234,7 +234,7 @@ class Console
      * Asks the user for input. Ends when the user types a PHP_EOL. Optionally
      * provide a prompt.
      *
-     * @param string $prompt String prompt (optional)
+     * @param string|null $prompt String prompt (optional)
      * @param bool   $raw    If set to true, returns the raw string without trimming
      *
      * @return string|null User input
@@ -324,7 +324,7 @@ class Console
      * @param string|null $text String to write to STDERR
      * @param bool   $raw  Write string as-is; defaults to false
      *
-     * @return int|false Number of bytes printed or false on error
+     * @return int|null Number of bytes printed or false on error
      */
     public static function error(?string $text = null, bool $raw = false): ?int
     {
