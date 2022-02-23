@@ -336,6 +336,7 @@ class Console
             $input = static::input("$text: ");
         }
 
+        /** @var string|false */
         $error = false;
         if (!strlen($input)) {
             if (isset($options['default'])) {
