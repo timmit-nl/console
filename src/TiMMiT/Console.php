@@ -129,7 +129,7 @@ class Console
      * Converts colorcodes in the format %y (for yellow) into ansi-control
      * codes. The conversion table is: ('bold' meaning 'light' on some
      * terminals). It's almost the same conversion table irssi uses.
-     * <pre> 
+     * <pre>
      *                  text      text            background
      *      ------------------------------------------------
      *      %k %K %0    black     dark grey       black
@@ -154,7 +154,7 @@ class Console
      * colors should be used. It defaults to true, if set to false, the
      * colorcodes will just be removed (And %% will be transformed into %)
      *
-     * @param string $text String to color
+     * @param string $text  String to color
      * @param bool $color color it
      *
      * @return string
@@ -206,7 +206,16 @@ class Console
      */
     public static function stdin($raw = false)
     {
-        return $raw ? fgets(STDIN) : rtrim(fgets(STDIN), PHP_EOL);
+        if (defined('DAEMON_STDIN')) {
+            $stdin = constant('DAEMON_STDIN');
+        } else {
+            $stdin = STDIN;
+        }
+        $input = fgets($stdin);
+        if (!$raw) {
+            $input = rtrim($input, PHP_EOL);
+        }
+        return $input;
     }
 
     /**
@@ -214,7 +223,7 @@ class Console
      * provide a prompt.
      *
      * @param string $prompt String prompt (optional)
-     * @param bool   $raw If set to true, returns the raw string without trimming
+     * @param bool   $raw    If set to true, returns the raw string without trimming
      *
      * @return string User input
      */
@@ -236,13 +245,18 @@ class Console
      */
     public static function stdout($text, $raw = false)
     {
-        if (is_resource(STDOUT)) {
+        if (defined('DAEMON_STDOUT')) {
+            $stdout = constant('DAEMON_STDOUT');
+        } else {
+            $stdout = STDOUT;
+        }
+        if (is_resource($stdout)) {
             if ($raw) {
-                return fwrite(STDOUT, $text);
-            } elseif (extension_loaded('posix') && posix_isatty(STDOUT)) {
-                return fwrite(STDOUT, static::colorize($text));
+                return fwrite($stdout, $text);
+            } elseif (extension_loaded('posix') && posix_isatty($stdout)) {
+                return fwrite($stdout, static::colorize($text));
             } else {
-                return fwrite(STDOUT, static::decolorize($text));
+                return fwrite($stdout, static::decolorize($text));
             }
         }
     }
@@ -270,12 +284,17 @@ class Console
      */
     public static function stderr($text, $raw = false)
     {
-        if ($raw) {
-            return fwrite(STDERR, $text);
-        } elseif (extension_loaded('posix') && posix_isatty(STDERR)) {
-            return fwrite(STDERR, static::colorize($text));
+        if (defined('DAEMON_STDERR')) {
+            $stderr = constant('DAEMON_STDERR');
         } else {
-            return fwrite(STDERR, static::decolorize($text));
+            $stderr = STDERR;
+        }
+        if ($raw) {
+            return fwrite($stderr, $text);
+        } elseif (extension_loaded('posix') && posix_isatty($stderr)) {
+            return fwrite($stderr, static::colorize($text));
+        } else {
+            return fwrite($stderr, static::decolorize($text));
         }
     }
 
@@ -351,7 +370,9 @@ class Console
     {
         top:
         $input = strtolower(static::input("$text [y/n]: "));
-        if (!in_array($input, array('y', 'n'))) goto top;
+        if (!in_array($input, array('y', 'n'))) {
+            goto top;
+        }
         return $input === 'y' ? true : false;
     }
 
@@ -375,7 +396,9 @@ class Console
             }
             echo " ? - Show help\n";
             goto top;
-        } elseif (!in_array($input, array_keys($options))) goto top;
+        } elseif (!in_array($input, array_keys($options))) {
+            goto top;
+        }
         return $input;
     }
 
@@ -438,8 +461,8 @@ class Console
                 $text = '';
                 while (!$done) {
                     $r = array($sockets[1]);
-                    $w = null;
-                    $e = null;
+                    $w = array();
+                    $e = array();
                     if ($status = socket_select($r, $w, $e, 0)) {
                         $data = socket_read($sockets[1], 4096, PHP_NORMAL_READ);
                         if ($data === false) {
