@@ -105,13 +105,13 @@ class Console
      * Create ANSI-control codes for text foreground and background colors, and
      * styling.
      *
-     * @param string $fgcolor Text foreground color
-     * @param string $style   Text style
-     * @param string $bgcolor Text background color
+     * @param string|null $fgcolor Text foreground color
+     * @param string|null $style   Text style
+     * @param string|null $bgcolor Text background color
      *
      * @return string ANSI-control code
      */
-    public static function color(string $fgcolor, string $style, string $bgcolor): string
+    public static function color(?string $fgcolor, ?string $style, ?string $bgcolor): string
     {
         $code = array();
         if ($fgcolor == 'reset') {
