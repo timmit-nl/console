@@ -435,13 +435,13 @@ class Console
      * the return value of the background process, or null if the process fork
      * failed.
      *
-     * @param callable $callable Closure object
+     * @param Closure|string $callable Closure object
      *
      * @return int|null Process exit status
      *
      * @throws \Exception If extensions aren't loaded.
      */
-    public static function work(callable $callable): ?int
+    public static function work(Closure|string $callable): ?int
     {
         if (!extension_loaded('pcntl')) {
             throw new \Exception('pcntl extension required');
@@ -517,7 +517,9 @@ class Console
                     $i = $i === $l - 1 ? 0 : $i + 1;
                 }
             }
-
+            if ($retval === false) {
+                return null;
+            }
             return $retval;
         } elseif ($pid === 0) {
             if ($socket) {
