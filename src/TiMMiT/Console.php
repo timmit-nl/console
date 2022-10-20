@@ -435,13 +435,13 @@ class Console
      * the return value of the background process, or null if the process fork
      * failed.
      *
-     * @param Closure|string $callable Closure object
+     * @param callable $callable Closure object
      *
      * @return int|null Process exit status
      *
      * @throws \Exception If extensions aren't loaded.
      */
-    public static function work(Closure|string $callable): ?int
+    public static function workX(callable $callable): ?int
     {
         if (!extension_loaded('pcntl')) {
             throw new \Exception('pcntl extension required');
@@ -456,7 +456,8 @@ class Console
         $l = count($spinner);
         $delay = 100000;
 
-        $func = new \ReflectionFunction($callable);
+        $callableClosure = \Closure::fromCallable($callable);
+        $func = new \ReflectionFunction($callableClosure);
 
         $socket = (bool)$func->getNumberOfParameters();
         $sockets = array();
