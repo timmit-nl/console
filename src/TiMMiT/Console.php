@@ -335,7 +335,7 @@ class Console
      * Prompts the user for input
      *
      * @param string $text    Prompt string
-     * @param array  $options Set of options
+     * @param mixed[]  $options Set of options
      *
      * @return string
      */
@@ -405,7 +405,7 @@ class Console
      * a list of options to choose from and their explanations.
      *
      * @param string $text    Prompt string
-     * @param array  $options Key-value array of options to choose from
+     * @param mixed[]  $options Key-value array of options to choose from
      *
      * @return string An option character the user chose
      */
