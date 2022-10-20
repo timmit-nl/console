@@ -335,7 +335,7 @@ class Console
      * Prompts the user for input
      *
      * @param string $text    Prompt string
-     * @param array  $options Set of options
+     * @param mixed[]  $options Set of options
      *
      * @return string
      */
@@ -405,7 +405,7 @@ class Console
      * a list of options to choose from and their explanations.
      *
      * @param string $text    Prompt string
-     * @param array  $options Key-value array of options to choose from
+     * @param mixed[]  $options Key-value array of options to choose from
      *
      * @return string An option character the user chose
      */
@@ -441,7 +441,7 @@ class Console
      *
      * @throws \Exception If extensions aren't loaded.
      */
-    public static function work(callable $callable): ?int
+    public static function workX(callable $callable): ?int
     {
         if (!extension_loaded('pcntl')) {
             throw new \Exception('pcntl extension required');
@@ -456,7 +456,8 @@ class Console
         $l = count($spinner);
         $delay = 100000;
 
-        $func = new \ReflectionFunction($callable);
+        $callableClosure = \Closure::fromCallable($callable);
+        $func = new \ReflectionFunction($callableClosure);
 
         $socket = (bool)$func->getNumberOfParameters();
         $sockets = array();
@@ -517,7 +518,9 @@ class Console
                     $i = $i === $l - 1 ? 0 : $i + 1;
                 }
             }
-
+            if ($retval === false) {
+                return null;
+            }
             return $retval;
         } elseif ($pid === 0) {
             if ($socket) {
