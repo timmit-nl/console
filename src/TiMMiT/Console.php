@@ -172,7 +172,24 @@ class Console
     {
         $text = str_replace('%%', '% ', $text);
         foreach (static::$CONVERSIONS as $key => $value) {
-            list($fgcolor, $style, $bgcolor) = $value;
+            if (is_array($value)) {
+                list($fgcolor, $style, $bgcolor) = $value;
+            } else {
+                $fgcolor = null;
+                $style = null;
+                $bgcolor = null;
+            }
+
+            if (!is_string($fgcolor)) {
+                $fgcolor = null;
+            }
+            if (!is_string($style)) {
+                $style = null;
+            }
+            if (!is_string($bgcolor)) {
+                $bgcolor = null;
+            }
+
             $text = str_replace(
                 $key,
                 $color ? static::color($fgcolor, $style, $bgcolor) : '',
@@ -409,7 +426,7 @@ class Console
      * a list of options to choose from and their explanations.
      *
      * @param string $text    Prompt string
-     * @param mixed[]  $options Key-value array of options to choose from
+     * @param string[]  $options Key-value array of options to choose from
      *
      * @return string An option character the user chose
      */
