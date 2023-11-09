@@ -19,7 +19,7 @@ class Console
     /**
      * @var int[] $FGCOLOR Text foreground colors.
      */
-    protected static $FGCOLOR = [
+    protected static array $FGCOLOR = [
         'black'  => 30,
         'red'    => 31,
         'green'  => 32,
@@ -34,7 +34,7 @@ class Console
     /**
      * @var int[] $STYLE Text styling.
      */
-    protected static $STYLE = [
+    protected static array $STYLE = [
         'normal'     => 0,
         'bold'       => 1,
         'light'      => 1,
@@ -49,7 +49,7 @@ class Console
     /**
      * @var int[] $BGCOLOR Text background color.
      */
-    protected static $BGCOLOR = [
+    protected static array $BGCOLOR = [
         'black'  => 40,
         'red'    => 41,
         'green'  => 42,
@@ -64,7 +64,7 @@ class Console
     /**
      * @var mixed[] $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
      */
-    protected static $CONVERSIONS = [
+    protected static array $CONVERSIONS = [
         '%y' => ['yellow', null, null],
         '%g' => ['green', null, null],
         '%b' => ['blue', null, null],
@@ -445,114 +445,5 @@ class Console
             goto top;
         }
         return $input;
-    }
-
-    /**
-     * Execute a Closure as another process in the background while showing a
-     * status update. The status update can be an indefinite spinner or a string
-     * periodically sent from the background process, depending on whether the
-     * provided Closure object has a $socket parameter or not. Messaging to the
-     * main process is done by socket_* functions. The return value is either
-     * the return value of the background process, or null if the process fork
-     * failed.
-     *
-     * @param callable $callable Closure object
-     *
-     * @return int|null Process exit status
-     *
-     * @throws \Exception If extensions aren't loaded.
-     */
-    public static function workX(callable $callable): ?int
-    {
-        if (!extension_loaded('pcntl')) {
-            throw new \Exception('pcntl extension required');
-        }
-
-        if (!extension_loaded('sockets')) {
-            throw new \Exception('sockets extension required');
-        }
-
-        $spinner = ['|', '/', '-', '\\'];
-        $i = 0;
-        $l = count($spinner);
-        $delay = 100000;
-
-        $callableClosure = \Closure::fromCallable($callable);
-        $func = new \ReflectionFunction($callableClosure);
-
-        $socket = (bool)$func->getNumberOfParameters();
-        $sockets = [];
-
-        if ($socket) {
-            $sockets = [];
-            if (socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $sockets) === false) {
-                return null;
-            }
-        }
-
-        $pid = pcntl_fork();
-
-        if ($pid > 0) {
-            $done   = false;
-            $retval = 0;
-            pcntl_signal(SIGCHLD, function () use ($pid, &$done, &$retval) {
-                $child_pid = pcntl_waitpid($pid, $status, 0);
-                if (pcntl_wifexited($status)) {
-                    $retval = pcntl_wexitstatus($status);
-                }
-                $done = true;
-            });
-
-            if ($socket) {
-                $text = '';
-                while (!$done) {
-                    $r = [$sockets[1]];
-                    $w = [];
-                    $e = [];
-                    if ($status = socket_select($r, $w, $e, 0)) {
-                        $data = socket_read($sockets[1], 4096, PHP_NORMAL_READ);
-                        if ($data === false) {
-                            throw new \Exception(
-                                sprintf(
-                                    'socket write error %s',
-                                    socket_strerror(socket_last_error($sockets[1]))
-                                )
-                            );
-                        }
-                        echo str_repeat(chr(8), strlen($text));
-                        $text = rtrim($data, "\n");
-                        Console::stdout($text);
-                    } else {
-                        pcntl_signal_dispatch();
-                    }
-                    usleep($delay);
-                }
-                echo str_repeat(chr(8), strlen($text));
-                socket_close($sockets[0]);
-                socket_close($sockets[1]);
-            } else {
-                while (!$done) {
-                    pcntl_signal_dispatch();
-                    echo $spinner[$i];
-                    usleep($delay);
-                    echo chr(8);
-                    $i = $i === $l - 1 ? 0 : $i + 1;
-                }
-            }
-            if (false === $retval) {
-                return null;
-            }
-            return $retval;
-        } elseif (0 === $pid) {
-            if ($socket) {
-                call_user_func($callable, $sockets[0]);
-            } else {
-                call_user_func($callable);
-            }
-            exit;
-        } else {
-            // Unable to fork process.
-            return null;
-        }
     }
 }
