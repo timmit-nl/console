@@ -19,7 +19,7 @@ class Console
     /**
      * @var int[] $FGCOLOR Text foreground colors.
      */
-    protected static $FGCOLOR = array(
+    protected static array $FGCOLOR = [
         'black'  => 30,
         'red'    => 31,
         'green'  => 32,
@@ -29,12 +29,12 @@ class Console
         'cyan'   => 36,
         'grey'   => 37,
         'yellow' => 33,
-    );
+    ];
 
     /**
      * @var int[] $STYLE Text styling.
      */
-    protected static $STYLE = array(
+    protected static array $STYLE = [
         'normal'     => 0,
         'bold'       => 1,
         'light'      => 1,
@@ -44,12 +44,12 @@ class Console
         'inverse'    => 6,
         'hidden'     => 8,
         'concealed'  => 8,
-    );
+    ];
 
     /**
      * @var int[] $BGCOLOR Text background color.
      */
-    protected static $BGCOLOR = array(
+    protected static array $BGCOLOR = [
         'black'  => 40,
         'red'    => 41,
         'green'  => 42,
@@ -59,47 +59,47 @@ class Console
         'purple' => 45,
         'cyan'   => 46,
         'grey'   => 47,
-    );
+    ];
 
     /**
      * @var mixed[] $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
      */
-    protected static $CONVERSIONS = array(
-        '%y' => array('yellow', null, null),
-        '%g' => array('green', null, null),
-        '%b' => array('blue', null, null),
-        '%r' => array('red', null, null),
-        '%p' => array('purple', null, null),
-        '%m' => array('purple', null, null),
-        '%c' => array('cyan', null, null),
-        '%w' => array('grey', null, null),
-        '%k' => array('black', null, null),
-        '%n' => array('reset', null, null),
-        '%Y' => array('yellow', 'light', null),
-        '%G' => array('green', 'light', null),
-        '%B' => array('blue', 'light', null),
-        '%R' => array('red', 'light', null),
-        '%P' => array('purple', 'light', null),
-        '%M' => array('purple', 'light', null),
-        '%C' => array('cyan', 'light', null),
-        '%W' => array('grey', 'light', null),
-        '%K' => array('black', 'light', null),
-        '%N' => array('reset', 'light', null),
-        '%3' => array(null, null, 'yellow'),
-        '%2' => array(null, null, 'green'),
-        '%4' => array(null, null, 'blue'),
-        '%1' => array(null, null, 'red'),
-        '%5' => array(null, null, 'purple'),
-        '%6' => array(null, null, 'cyan'),
-        '%7' => array(null, null, 'grey'),
-        '%0' => array(null, null, 'black'),
+    protected static array $CONVERSIONS = [
+        '%y' => ['yellow', null, null],
+        '%g' => ['green', null, null],
+        '%b' => ['blue', null, null],
+        '%r' => ['red', null, null],
+        '%p' => ['purple', null, null],
+        '%m' => ['purple', null, null],
+        '%c' => ['cyan', null, null],
+        '%w' => ['grey', null, null],
+        '%k' => ['black', null, null],
+        '%n' => ['reset', null, null],
+        '%Y' => ['yellow', 'light', null],
+        '%G' => ['green', 'light', null],
+        '%B' => ['blue', 'light', null],
+        '%R' => ['red', 'light', null],
+        '%P' => ['purple', 'light', null],
+        '%M' => ['purple', 'light', null],
+        '%C' => ['cyan', 'light', null],
+        '%W' => ['grey', 'light', null],
+        '%K' => ['black', 'light', null],
+        '%N' => ['reset', 'light', null],
+        '%3' => [null, null, 'yellow'],
+        '%2' => [null, null, 'green'],
+        '%4' => [null, null, 'blue'],
+        '%1' => [null, null, 'red'],
+        '%5' => [null, null, 'purple'],
+        '%6' => [null, null, 'cyan'],
+        '%7' => [null, null, 'grey'],
+        '%0' => [null, null, 'black'],
         // Don't use this, I can't stand flashing text
-        '%F' => array(null, 'blink', null),
-        '%U' => array(null, 'underline', null),
-        '%8' => array(null, 'inverse', null),
-        '%9' => array(null, 'bold', null),
-        '%_' => array(null, 'bold', null),
-    );
+        '%F' => [null, 'blink', null],
+        '%U' => [null, 'underline', null],
+        '%8' => [null, 'inverse', null],
+        '%9' => [null, 'bold', null],
+        '%_' => [null, 'bold', null],
+    ];
 
     /**
      * Create ANSI-control codes for text foreground and background colors, and
@@ -113,7 +113,7 @@ class Console
      */
     public static function color(?string $fgcolor, ?string $style, ?string $bgcolor): string
     {
-        $code = array();
+        $code = [];
         if ($fgcolor == 'reset') {
             return "\033[0m";
         }
@@ -172,7 +172,24 @@ class Console
     {
         $text = str_replace('%%', '% ', $text);
         foreach (static::$CONVERSIONS as $key => $value) {
-            list($fgcolor, $style, $bgcolor) = $value;
+            if (is_array($value)) {
+                list($fgcolor, $style, $bgcolor) = $value;
+            } else {
+                $fgcolor = null;
+                $style = null;
+                $bgcolor = null;
+            }
+
+            if (!is_string($fgcolor)) {
+                $fgcolor = null;
+            }
+            if (!is_string($style)) {
+                $style = null;
+            }
+            if (!is_string($bgcolor)) {
+                $bgcolor = null;
+            }
+
             $text = str_replace(
                 $key,
                 $color ? static::color($fgcolor, $style, $bgcolor) : '',
@@ -203,7 +220,7 @@ class Console
      */
     public static function strip(string $text): string
     {
-        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text);
+        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text) ?? '';
     }
 
     /**
@@ -283,9 +300,9 @@ class Console
      * @param string $text String to write to STDOUT
      * @param bool   $raw  Write string as-is; defaults to false
      *
-     * @return int|false Number of bytes printed or false on error
+     * @return int|null Number of bytes printed or false on error
      */
-    public static function output($text = null, $raw = false)
+    public static function output(string $text = '', bool $raw = false): ?int
     {
         return static::stdout($text . PHP_EOL, $raw);
     }
@@ -339,36 +356,40 @@ class Console
      *
      * @return string
      */
-    public static function prompt(string $text, array $options = array()): string
+    public static function prompt(string $text, array $options = []): string
     {
-        $options = $options + array(
+        $options = $options + [
             'required'  => false,
             'default'   => null,
             'pattern'   => null,
             'validator' => null,
             'error'     => 'Input unacceptable.',
-        );
+        ];
 
         top:
-        if ($options['default']) {
+        if ((bool)$options['default']) {
             $input = static::input("$text [" . $options['default'] . ']: ');
         } else {
             $input = static::input("$text: ");
         }
 
+        if (is_null($input)) {
+            $input = '';
+        }
+
         /** @var string|false */
         $error = false;
-        if (!strlen($input)) {
-            if (isset($options['default'])) {
+        if (strlen($input) > 0) {
+            if (is_string($options['default'])) {
                 $input = $options['default'];
             } elseif ($options['required']) {
                 static::output($options['error']);
                 goto top;
             }
-        } elseif ($options['pattern'] && !preg_match($options['pattern'], $input)) {
+        } elseif (is_string($options['pattern']) && !preg_match($options['pattern'], $input)) {
             static::output($options['error']);
             goto top;
-        } elseif ($options['validator'] && !call_user_func_array($options['validator'], array($input, &$error))) {
+        } elseif (is_callable($options['validator']) && !call_user_func_array($options['validator'], [$input, &$error])) {
             if (is_string($error)) {
                 static::output($error);
             } else {
@@ -390,8 +411,8 @@ class Console
     public static function confirm(string $text): bool
     {
         top:
-        $input = strtolower(static::input("$text [y/n]: "));
-        if (!in_array($input, array('y', 'n'))) {
+        $input = strtolower(static::input("$text [y/n]: ") ?? '');
+        if (!in_array($input, ['y', 'n'], true)) {
             goto top;
         }
         if ($input === 'y') {
@@ -405,133 +426,24 @@ class Console
      * a list of options to choose from and their explanations.
      *
      * @param string $text    Prompt string
-     * @param mixed[]  $options Key-value array of options to choose from
+     * @param string[]  $options Key-value array of options to choose from
      *
      * @return string An option character the user chose
      */
-    public static function select(string $text, array $options = array()): string
+    public static function select(string $text, array $options = []): string
     {
         top:
         static::stdout("$text [" . implode(',', array_keys($options)) . ",?]: ");
-        $input = static::stdin();
+        $input = static::stdin() ?? '';
         if ($input === '?') {
             foreach ($options as $key => $value) {
                 echo " $key - $value\n";
             }
             echo " ? - Show help\n";
             goto top;
-        } elseif (!in_array($input, array_keys($options))) {
+        } elseif (!in_array($input, array_keys($options), true)) {
             goto top;
         }
         return $input;
-    }
-
-    /**
-     * Execute a Closure as another process in the background while showing a
-     * status update. The status update can be an indefinite spinner or a string
-     * periodically sent from the background process, depending on whether the
-     * provided Closure object has a $socket parameter or not. Messaging to the
-     * main process is done by socket_* functions. The return value is either
-     * the return value of the background process, or null if the process fork
-     * failed.
-     *
-     * @param callable $callable Closure object
-     *
-     * @return int|null Process exit status
-     *
-     * @throws \Exception If extensions aren't loaded.
-     */
-    public static function workX(callable $callable): ?int
-    {
-        if (!extension_loaded('pcntl')) {
-            throw new \Exception('pcntl extension required');
-        }
-
-        if (!extension_loaded('sockets')) {
-            throw new \Exception('sockets extension required');
-        }
-
-        $spinner = array('|', '/', '-', '\\');
-        $i = 0;
-        $l = count($spinner);
-        $delay = 100000;
-
-        $callableClosure = \Closure::fromCallable($callable);
-        $func = new \ReflectionFunction($callableClosure);
-
-        $socket = (bool)$func->getNumberOfParameters();
-        $sockets = array();
-
-        if ($socket) {
-            $sockets = array();
-            if (socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $sockets) === false) {
-                return null;
-            }
-        }
-
-        $pid = pcntl_fork();
-
-        if ($pid > 0) {
-            $done   = false;
-            $retval = 0;
-            pcntl_signal(SIGCHLD, function () use ($pid, &$done, &$retval) {
-                $child_pid = pcntl_waitpid($pid, $status, 0);
-                if (pcntl_wifexited($status)) {
-                    $retval = pcntl_wexitstatus($status);
-                }
-                $done = true;
-            });
-
-            if ($socket) {
-                $text = '';
-                while (!$done) {
-                    $r = array($sockets[1]);
-                    $w = array();
-                    $e = array();
-                    if ($status = socket_select($r, $w, $e, 0)) {
-                        $data = socket_read($sockets[1], 4096, PHP_NORMAL_READ);
-                        if ($data === false) {
-                            throw new \Exception(
-                                sprintf(
-                                    'socket write error %s',
-                                    socket_strerror(socket_last_error($sockets[1]))
-                                )
-                            );
-                        }
-                        echo str_repeat(chr(8), strlen($text));
-                        $text = rtrim($data, "\n");
-                        Console::stdout($text);
-                    } else {
-                        pcntl_signal_dispatch();
-                    }
-                    usleep($delay);
-                }
-                echo str_repeat(chr(8), strlen($text));
-                socket_close($sockets[0]);
-                socket_close($sockets[1]);
-            } else {
-                while (!$done) {
-                    pcntl_signal_dispatch();
-                    echo $spinner[$i];
-                    usleep($delay);
-                    echo chr(8);
-                    $i = $i === $l - 1 ? 0 : $i + 1;
-                }
-            }
-            if ($retval === false) {
-                return null;
-            }
-            return $retval;
-        } elseif ($pid === 0) {
-            if ($socket) {
-                call_user_func($callable, $sockets[0]);
-            } else {
-                call_user_func($callable);
-            }
-            exit;
-        } else {
-            // Unable to fork process.
-            return null;
-        }
     }
 }
