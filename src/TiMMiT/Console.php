@@ -3,7 +3,7 @@
 /**
  * A very simple class for using Console.
  *
- * PHP version 7.4+
+ * PHP version 8.0+
  *
  * @package TiMMiT/Console
  * @author  Tim Schoondergang <tim.schoondergang@TiMMiT.nl>
