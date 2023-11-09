@@ -203,7 +203,7 @@ class Console
      */
     public static function strip(string $text): string
     {
-        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text);
+        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text) ?? '';
     }
 
     /**
@@ -283,9 +283,9 @@ class Console
      * @param string $text String to write to STDOUT
      * @param bool   $raw  Write string as-is; defaults to false
      *
-     * @return int|false Number of bytes printed or false on error
+     * @return int|null Number of bytes printed or false on error
      */
-    public static function output($text = null, $raw = false)
+    public static function output(string $text = '', bool $raw = false): ?int
     {
         return static::stdout($text . PHP_EOL, $raw);
     }
@@ -356,6 +356,10 @@ class Console
             $input = static::input("$text: ");
         }
 
+        if (is_null($input)) {
+            $input = '';
+        }
+
         /** @var string|false */
         $error = false;
         if (strlen($input) > 0) {
@@ -390,7 +394,7 @@ class Console
     public static function confirm(string $text): bool
     {
         top:
-        $input = strtolower(static::input("$text [y/n]: "));
+        $input = strtolower(static::input("$text [y/n]: ") ?? '');
         if (!in_array($input, ['y', 'n'], true)) {
             goto top;
         }
@@ -413,7 +417,7 @@ class Console
     {
         top:
         static::stdout("$text [" . implode(',', array_keys($options)) . ",?]: ");
-        $input = static::stdin();
+        $input = static::stdin() ?? '';
         if ($input === '?') {
             foreach ($options as $key => $value) {
                 echo " $key - $value\n";
