@@ -389,7 +389,7 @@ class Console
         } elseif (is_string($options['pattern']) && !preg_match($options['pattern'], $input)) {
             static::output($options['error']);
             goto top;
-        } elseif (is_callable($options['validator']) && !call_user_func_array($options['validator'], [$input, &$error])) {
+        } elseif (is_callable($options['validator']) && false === call_user_func_array($options['validator'], [$input, &$error])) {
             if (is_string($error)) {
                 static::output($error);
             } else {
