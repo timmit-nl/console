@@ -128,7 +128,7 @@ class Console
         if (isset(static::$BGCOLOR[$bgcolor])) {
             $code[] = static::$BGCOLOR[$bgcolor];
         }
-        if (empty($code)) {
+        if (count($code) === 0) {
             $code[] = 0;
         }
         return "\033[" . implode(';', $code) . 'm';
