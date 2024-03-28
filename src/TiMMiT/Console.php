@@ -128,7 +128,7 @@ class Console
         if (isset(static::$BGCOLOR[$bgcolor])) {
             $code[] = static::$BGCOLOR[$bgcolor];
         }
-        if (empty($code)) {
+        if (count($code) === 0) {
             $code[] = 0;
         }
         return "\033[" . implode(';', $code) . 'm';
@@ -388,7 +388,7 @@ class Console
                 static::output($options['error']);
                 goto top;
             }
-        } elseif (is_string($options['pattern']) && !preg_match($options['pattern'], $input)) {
+        } elseif (is_string($options['pattern']) && false === preg_match($options['pattern'], $input)) {
             static::output($options['error']);
             goto top;
         } elseif (is_callable($options['validator']) && false === call_user_func_array($options['validator'], [$input, &$error])) {
