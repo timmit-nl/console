@@ -388,7 +388,7 @@ class Console
                 static::output($options['error']);
                 goto top;
             }
-        } elseif (is_string($options['pattern']) && !preg_match($options['pattern'], $input)) {
+        } elseif (is_string($options['pattern']) && false === preg_match($options['pattern'], $input)) {
             static::output($options['error']);
             goto top;
         } elseif (is_callable($options['validator']) && false === call_user_func_array($options['validator'], [$input, &$error])) {
