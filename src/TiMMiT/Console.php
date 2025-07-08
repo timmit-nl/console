@@ -116,7 +116,7 @@ class Console
     public static function color(?string $fgcolor, ?string $style, ?string $bgcolor): string
     {
         $code = [];
-        if ($fgcolor == 'reset') {
+        if ('reset' === $fgcolor) {
             return "\033[0m";
         }
         if (isset(static::$FGCOLOR[$fgcolor])) {
@@ -306,7 +306,7 @@ class Console
      */
     public static function output(string $text = '', bool $raw = false): ?int
     {
-        return static::stdout((string)($text ?? '') . PHP_EOL, $raw);
+        return static::stdout($text . PHP_EOL, $raw);
     }
 
     /**
@@ -370,7 +370,7 @@ class Console
 
         top:
         if ((bool)$options['default']) {
-            $input = static::input("$text [" . $options['default'] . ']: ');
+            $input = static::input("$text [" . (string)$options['default'] . ']: ');
         } else {
             $input = static::input("$text: ");
         }
