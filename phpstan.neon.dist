@@ -1,5 +1,5 @@
 parameters:
-	level: 7
+	level: 9
 	parallel:
 		maximumNumberOfProcesses: 4
 		minimumNumberOfJobsPerProcess: 2
@@ -11,4 +11,7 @@ parameters:
 		- ./src
 	dynamicConstantNames:
 		- NONE
-	treatPhpDocTypesAsCertain: false
+	treatPhpDocTypesAsCertain: true
+includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon
+	- vendor/phpstan/phpstan-deprecation-rules/rules.neon
