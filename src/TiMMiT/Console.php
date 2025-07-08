@@ -193,7 +193,7 @@ class Console
             }
 
             $text = str_replace(
-                $key,
+                (string)$key,
                 $color ? static::color($fgcolor, $style, $bgcolor) : '',
                 $text
             );
