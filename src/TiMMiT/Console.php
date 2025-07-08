@@ -287,7 +287,7 @@ class Console
      */
     public static function output($text = null, $raw = false)
     {
-        return static::stdout($text . PHP_EOL, $raw);
+        return static::stdout((string)($text ?? '') . PHP_EOL, $raw);
     }
 
     /**
