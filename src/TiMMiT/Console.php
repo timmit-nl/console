@@ -369,8 +369,8 @@ class Console
         ];
 
         top:
-        if ((bool)$options['default']) {
-            $input = static::input("$text [" . (string)$options['default'] . ']: ');
+        if (is_string($options['default']) && '' !== $options['default']) {
+            $input = static::input("$text [" . $options['default'] . ']: ');
         } else {
             $input = static::input("$text: ");
         }
