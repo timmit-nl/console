@@ -25,10 +25,10 @@
         "ext-posix": "*"
     },
     "require-dev": {
-        "timmit/php-docblock-checker": "^1.11",
-        "phpstan/phpstan": "^1.4",
+        "phpstan/phpstan": "^1.9.4",
         "phpstan/phpstan-strict-rules": "^1.1",
-        "phpstan/phpstan-deprecation-rules": "^1.0"
+        "phpstan/phpstan-deprecation-rules":"^1.0",
+        "squizlabs/php_codesniffer": "^4.0"
     },
     "autoload": {
         "psr-4": {
