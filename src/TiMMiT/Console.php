@@ -174,29 +174,15 @@ class Console
     {
         $text = str_replace('%%', '% ', $text);
         foreach (static::$CONVERSIONS as $key => $value) {
-            if (is_array($value)) {
-                list($fgcolor, $style, $bgcolor) = $value;
-            } else {
-                $fgcolor = null;
-                $style = null;
-                $bgcolor = null;
-            }
+            $fgcolor = $value[0];
+            $style   = $value[1];
+            $bgcolor = $value[2];
 
-            if (!is_string($fgcolor)) {
-                $fgcolor = null;
+            $replacement = '';
+            if (true === $color) {
+                $replacement = static::color($fgcolor, $style, $bgcolor);
             }
-            if (!is_string($style)) {
-                $style = null;
-            }
-            if (!is_string($bgcolor)) {
-                $bgcolor = null;
-            }
-
-            $text = str_replace(
-                $key,
-                $color ? static::color($fgcolor, $style, $bgcolor) : '',
-                $text
-            );
+            $text = str_replace($key, $replacement, $text);
         }
         return str_replace('% ', '%', $text);
     }
@@ -222,7 +208,11 @@ class Console
      */
     public static function strip(string $text): string
     {
-        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text) ?? '';
+        $result = preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text);
+        if (is_null($result)) {
+            return '';
+        }
+        return $result;
     }
 
     /**
@@ -324,7 +314,7 @@ class Console
         } else {
             $stderr = STDERR;
         }
-        if ($raw) {
+        if (true === $raw) {
             $return = fwrite($stderr, $text);
         } elseif (extension_loaded('posix') && posix_isatty($stderr)) {
             $return = fwrite($stderr, static::colorize($text));
@@ -430,7 +420,11 @@ class Console
     public static function confirm(string $text): bool
     {
         top:
-        $input = strtolower(static::input("$text [y/n]: ") ?? '');
+        $rawInput = static::input("$text [y/n]: ");
+        if (is_null($rawInput)) {
+            $rawInput = '';
+        }
+        $input = strtolower($rawInput);
         if (!in_array($input, ['y', 'n'], true)) {
             goto top;
         }
@@ -453,7 +447,10 @@ class Console
     {
         top:
         static::stdout("$text [" . implode(',', array_keys($options)) . ",?]: ");
-        $input = static::stdin() ?? '';
+        $input = static::stdin();
+        if (is_null($input)) {
+            $input = '';
+        }
         if ('?' === $input) {
             foreach ($options as $key => $value) {
                 echo " $key - $value\n";
