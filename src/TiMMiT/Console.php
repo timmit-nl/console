@@ -19,7 +19,7 @@ namespace TiMMiT;
 class Console
 {
     /**
-     * @var int[] $FGCOLOR Text foreground colors.
+     * @var array<string, int> $FGCOLOR Text foreground colors.
      */
     protected static array $FGCOLOR = [
         'black'  => 30,
@@ -34,7 +34,7 @@ class Console
     ];
 
     /**
-     * @var int[] $STYLE Text styling.
+     * @var array<string, int> $STYLE Text styling.
      */
     protected static array $STYLE = [
         'normal'     => 0,
@@ -49,7 +49,7 @@ class Console
     ];
 
     /**
-     * @var int[] $BGCOLOR Text background color.
+     * @var array<string, int> $BGCOLOR Text background color.
      */
     protected static array $BGCOLOR = [
         'black'  => 40,
@@ -64,7 +64,7 @@ class Console
     ];
 
     /**
-     * @var mixed[] $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
+     * @var array<string, array{string|null, string|null, string|null}> $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
      */
     protected static array $CONVERSIONS = [
         '%y' => ['yellow', null, null],
@@ -116,7 +116,7 @@ class Console
     public static function color(?string $fgcolor, ?string $style, ?string $bgcolor): string
     {
         $code = [];
-        if ($fgcolor == 'reset') {
+        if ('reset' === $fgcolor) {
             return "\033[0m";
         }
         if (isset(static::$FGCOLOR[$fgcolor])) {
@@ -128,7 +128,7 @@ class Console
         if (isset(static::$BGCOLOR[$bgcolor])) {
             $code[] = static::$BGCOLOR[$bgcolor];
         }
-        if (count($code) === 0) {
+        if (0 === count($code)) {
             $code[] = 0;
         }
         return "\033[" . implode(';', $code) . 'm';
@@ -174,29 +174,15 @@ class Console
     {
         $text = str_replace('%%', '% ', $text);
         foreach (static::$CONVERSIONS as $key => $value) {
-            if (is_array($value)) {
-                list($fgcolor, $style, $bgcolor) = $value;
-            } else {
-                $fgcolor = null;
-                $style = null;
-                $bgcolor = null;
-            }
+            $fgcolor = $value[0];
+            $style   = $value[1];
+            $bgcolor = $value[2];
 
-            if (!is_string($fgcolor)) {
-                $fgcolor = null;
+            $replacement = '';
+            if (true === $color) {
+                $replacement = static::color($fgcolor, $style, $bgcolor);
             }
-            if (!is_string($style)) {
-                $style = null;
-            }
-            if (!is_string($bgcolor)) {
-                $bgcolor = null;
-            }
-
-            $text = str_replace(
-                $key,
-                $color ? static::color($fgcolor, $style, $bgcolor) : '',
-                $text
-            );
+            $text = str_replace($key, $replacement, $text);
         }
         return str_replace('% ', '%', $text);
     }
@@ -222,7 +208,11 @@ class Console
      */
     public static function strip(string $text): string
     {
-        return preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text) ?? '';
+        $result = preg_replace('/\033\[(\d+)(;\d+)*m/', '', $text);
+        if (is_null($result)) {
+            return '';
+        }
+        return $result;
     }
 
     /**
@@ -241,7 +231,7 @@ class Console
         }
         $input = fgets($stdin);
         if (is_string($input)) {
-            if (!$raw) {
+            if (false === $raw) {
                 $input = rtrim($input, PHP_EOL);
             }
             return $input;
@@ -282,14 +272,14 @@ class Console
             $stdout = STDOUT;
         }
         if (is_resource($stdout)) {
-            if ($raw) {
+            if (true === $raw) {
                 $return = fwrite($stdout, $text);
             } elseif (extension_loaded('posix') && posix_isatty($stdout)) {
                 $return = fwrite($stdout, static::colorize($text));
             } else {
                 $return = fwrite($stdout, static::decolorize($text));
             }
-            if ($return !== false) {
+            if (false !== $return) {
                 return $return;
             }
         }
@@ -324,14 +314,14 @@ class Console
         } else {
             $stderr = STDERR;
         }
-        if ($raw) {
+        if (true === $raw) {
             $return = fwrite($stderr, $text);
         } elseif (extension_loaded('posix') && posix_isatty($stderr)) {
             $return = fwrite($stderr, static::colorize($text));
         } else {
             $return = fwrite($stderr, static::decolorize($text));
         }
-        if ($return !== false) {
+        if (false !== $return) {
             return $return;
         }
         return null;
@@ -354,7 +344,7 @@ class Console
      * Prompts the user for input
      *
      * @param string $text    Prompt string
-     * @param mixed[]  $options Set of options
+     * @param array<string, bool|string|null|callable>  $options Set of options
      *
      * @return string
      */
@@ -369,7 +359,24 @@ class Console
         ];
 
         top:
-        if ((bool)$options['default']) {
+
+        if (!is_string($options['error'])) {
+            $options['error'] = 'Input unacceptable.';
+        }
+
+        if (!is_string($options['default'])) {
+            $options['default'] = null;
+        }
+
+        if (!is_bool($options['required'])) {
+            $options['required'] = false;
+        }
+
+        if (!is_string($options['pattern'])) {
+            $options['pattern'] = null;
+        }
+
+        if (is_string($options['default']) && '' !== $options['default']) {
             $input = static::input("$text [" . $options['default'] . ']: ');
         } else {
             $input = static::input("$text: ");
@@ -413,11 +420,15 @@ class Console
     public static function confirm(string $text): bool
     {
         top:
-        $input = strtolower(static::input("$text [y/n]: ") ?? '');
+        $rawInput = static::input("$text [y/n]: ");
+        if (is_null($rawInput)) {
+            $rawInput = '';
+        }
+        $input = strtolower($rawInput);
         if (!in_array($input, ['y', 'n'], true)) {
             goto top;
         }
-        if ($input === 'y') {
+        if ('y' === $input) {
             return true;
         }
         return false;
@@ -428,7 +439,7 @@ class Console
      * a list of options to choose from and their explanations.
      *
      * @param string $text    Prompt string
-     * @param string[]  $options Key-value array of options to choose from
+     * @param array<string|int, string>  $options Key-value array of options to choose from
      *
      * @return string An option character the user chose
      */
@@ -436,8 +447,11 @@ class Console
     {
         top:
         static::stdout("$text [" . implode(',', array_keys($options)) . ",?]: ");
-        $input = static::stdin() ?? '';
-        if ($input === '?') {
+        $input = static::stdin();
+        if (is_null($input)) {
+            $input = '';
+        }
+        if ('?' === $input) {
             foreach ($options as $key => $value) {
                 echo " $key - $value\n";
             }
@@ -447,5 +461,55 @@ class Console
             goto top;
         }
         return $input;
+    }
+
+    /**
+     * Outputs a result table.
+     *
+     * @param string $status         Status of the result
+     * @param string $label          Label of the result
+     * @param string $secondaryLabel Secondary label of the result
+     * @param string $result         Result of the result
+     * @param array<string, string|int> $options        Options for the result table
+     *            'lengthStatus' => 8,
+     *            'lengthProductLabel' => 30,
+     *            'lengthSecondaryLabel' => 20,
+     *            'lengthResultLabel' => 15,
+     *            'statusColorOK' => 'g',
+     *            'statusColorFailed' => 'r',
+     *            'statusColorSkip' => 'y',
+     *
+     * @return void
+     */
+    public static function outputResultTable(string $status, string $label, string $secondaryLabel, string $result, array $options = []): void
+    {
+        $options = $options + [
+            'lengthStatus' => 8,
+            'lengthLabel' => 20,
+            'lengthSecondaryLabel' => 25,
+            'lengthResultLabel' => 15,
+            'statusColorOK' => 'g',
+            'statusColorFailed' => 'r',
+            'statusColorSkip' => 'y',
+        ];
+
+        $statusColor = 'n';
+        switch (strtoupper($status)) {
+            case 'OK':
+                $statusColor = $options['statusColorOK'];
+                break;
+            case 'FAILED':
+                $statusColor = $options['statusColorFailed'];
+                break;
+            case 'SKIP':
+                $statusColor = $options['statusColorSkip'];
+        }
+
+        Console::output(
+            '[%' . $statusColor . str_pad(strtoupper($status), (int)$options['lengthStatus'], ' ', STR_PAD_BOTH) . '%n] ' .
+                str_pad($label, (int)$options['lengthLabel'], ' ', STR_PAD_RIGHT) . ' ' .
+                str_pad($secondaryLabel, (int)$options['lengthSecondaryLabel'], ' ', STR_PAD_RIGHT) . ' ' .
+                str_pad($result, (int)$options['lengthResultLabel'], ' ', STR_PAD_RIGHT)
+        );
     }
 }
