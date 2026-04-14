@@ -369,6 +369,11 @@ class Console
         ];
 
         top:
+
+        if (!is_string($options['error'])) {
+            $options['error'] = 'Input unacceptable.';
+        }
+
         if ((bool)($options['default'] ?? false)) {
             $input = static::input("$text [" . $options['default'] . ']: ');
         } else {
@@ -479,6 +484,7 @@ class Console
             'statusColorSkip' => 'y',
         ];
 
+        $statusColor = 'n';
         switch (strtoupper($status)) {
             case 'OK':
                 $statusColor = $options['statusColorOK'];
@@ -490,6 +496,11 @@ class Console
                 $statusColor = $options['statusColorSkip'];
         }
 
-        Console::output('[%' . $statusColor . str_pad(strtoupper($status), $options['lengthStatus'], ' ', STR_PAD_BOTH) . '%n] ' . str_pad($label, $options['lengthLabel'], ' ', STR_PAD_RIGHT) . ' ' . str_pad($secondaryLabel, $options['lengthSecondaryLabel'], ' ', STR_PAD_RIGHT) . ' ' . str_pad($result, $options['lengthResultLabel'], ' ', STR_PAD_RIGHT));
+        Console::output(
+            '[%' . $statusColor . str_pad(strtoupper($status), (int)$options['lengthStatus'], ' ', STR_PAD_BOTH) . '%n] ' .
+                str_pad($label, (int)$options['lengthLabel'], ' ', STR_PAD_RIGHT) . ' ' .
+                str_pad($secondaryLabel, (int)$options['lengthSecondaryLabel'], ' ', STR_PAD_RIGHT) . ' ' .
+                str_pad($result, (int)$options['lengthResultLabel'], ' ', STR_PAD_RIGHT)
+        );
     }
 }
