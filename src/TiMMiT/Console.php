@@ -64,7 +64,7 @@ class Console
     ];
 
     /**
-     * @var array<string, array<string|null, string|null, string|null>> $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
+     * @var array<string, array{string|null, string|null, string|null}> $CONVERSIONS Color specifier conversion table. Taken from PEAR's Console_Color.
      */
     protected static array $CONVERSIONS = [
         '%y' => ['yellow', null, null],
@@ -374,7 +374,19 @@ class Console
             $options['error'] = 'Input unacceptable.';
         }
 
-        if ((bool)($options['default'] ?? false)) {
+        if (!is_string($options['default'])) {
+            $options['default'] = null;
+        }
+
+        if (!is_bool($options['required'])) {
+            $options['required'] = false;
+        }
+
+        if (!is_string($options['pattern'])) {
+            $options['pattern'] = null;
+        }
+
+        if (is_string($options['default']) && '' !== $options['default']) {
             $input = static::input("$text [" . $options['default'] . ']: ');
         } else {
             $input = static::input("$text: ");
