@@ -457,18 +457,18 @@ class Console
     /**
      * Outputs a result table.
      *
-     * @param string $status Status of the result
-     * @param string $label Label of the result
+     * @param string $status         Status of the result
+     * @param string $label          Label of the result
      * @param string $secondaryLabel Secondary label of the result
-     * @param string $result Result of the result
-     * @param array<string, string|int> $options Options for the result table
-     *     'lengthStatus' => 8,
-     *     'lengthProductLabel' => 30,
-     *     'lengthSecondaryLabel' => 20,
-     *     'lengthResultLabel' => 15,
-     *     'statusColorOK' => 'g',
-     *     'statusColorFailed' => 'r',
-     *     'statusColorSkip' => 'y',
+     * @param string $result         Result of the result
+     * @param array<string, string|int> $options        Options for the result table
+     *            'lengthStatus' => 8,
+     *            'lengthProductLabel' => 30,
+     *            'lengthSecondaryLabel' => 20,
+     *            'lengthResultLabel' => 15,
+     *            'statusColorOK' => 'g',
+     *            'statusColorFailed' => 'r',
+     *            'statusColorSkip' => 'y',
      *
      * @return void
      */
