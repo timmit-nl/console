@@ -119,14 +119,20 @@ class Console
         if ('reset' === $fgcolor) {
             return "\033[0m";
         }
-        if (isset(static::$FGCOLOR[$fgcolor])) {
-            $code[] = static::$FGCOLOR[$fgcolor];
+        if (!is_null($fgcolor)) {
+            if (isset(static::$FGCOLOR[$fgcolor])) {
+                $code[] = static::$FGCOLOR[$fgcolor];
+            }
         }
-        if (isset(static::$STYLE[$style])) {
-            $code[] = static::$STYLE[$style];
+        if (!is_null($style)) {
+            if (isset(static::$STYLE[$style])) {
+                $code[] = static::$STYLE[$style];
+            }
         }
-        if (isset(static::$BGCOLOR[$bgcolor])) {
-            $code[] = static::$BGCOLOR[$bgcolor];
+        if (!is_null($bgcolor)) {
+            if (isset(static::$BGCOLOR[$bgcolor])) {
+                $code[] = static::$BGCOLOR[$bgcolor];
+            }
         }
         if (0 === count($code)) {
             $code[] = 0;
