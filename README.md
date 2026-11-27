@@ -1,214 +1,111 @@
-# TiMMiT
+# timmit/console
 
-Console class provides helpers for starting and killing daemonized processes.
+Helpers for interactive command-line input and output. This package is a fork of [clio](https://github.com/nramenta/clio), reduced to the console. Process control lives in [timmit/daemon](https://github.com/timmit-nl/daemon).
 
-> Disclaimer: This package is forked version of [this](https://github.com/nramenta/clio).
-> Main goal of this fork/rewrite is provide a package responsible only for one thing.
+## Install
 
-## Installation
-
-The prefered way to install Daemon is through [composer][Composer]; the minimum
-composer.json configuration is:
-
-```
-{
-    "require": {
-        "timmit/console": "~1.0.0"
-    }
-}
+```bash
+composer require timmit/console
 ```
 
-PHP 5.4 is required. This library is developed on and is meant to be used on
-POSIX systems with the posix, pcntl, and sockets extensions loaded.
+Requires PHP >= 8.0, `ext-pcntl`, and `ext-posix`. `posix_isatty()` decides whether color codes are kept when writing to a terminal.
 
+When `DAEMON_STDIN`, `DAEMON_STDOUT`, or `DAEMON_STDERR` is defined, input and output use that stream instead of `STDIN`, `STDOUT`, or `STDERR`. `timmit/daemon` defines those constants in the child process.
 
-## Console
+## Output
 
-The Console class provides helpers for interactive command line input/output.
+`stdout()` prints a string. `output()` appends `PHP_EOL`. `stderr()` and `error()` do the same for the error stream. `error()` may be called without text.
 
-### Console::stdin($raw = false)
-
-Waits for user input. If `$raw` is set to `true`, returns the input without
-right trimming for `PHP_EOL`.
-
-### Console::input($prompt = null, $raw = false)
-
-Asks the user for input which ends when the user types a `PHP_EOL` character.
-You can optionally provide a prompt string. If `$raw` is set to `true`, returns
-the input without right trimming for `PHP_EOL`. 
-
-### Console::stdout($text, $raw = false)
-
-Prints `$text` to STDOUT. The text can contain text color and style specifiers.
-This method detects whether the text is to be sent out to TTY or to a file
-through the use of shell redirection and acts accordingly, in the case of the
-latter, by stripping the text of all color and style specifiers.
-
-If the second parameter is set to true, then it will print `$text` as is with
-all text color and style specifiers intact regardless of whether it's printing
-to TTY or to a file.
+Color codes in the text are translated on a TTY and stripped when the stream is not a TTY. Pass `true` as the second argument to write the text unchanged.
 
 ```php
-<?php
 use TiMMiT\Console;
-Console::stdout('Hello, World!');
+
+Console::stdout('Hello, %gWorld%n!');
+Console::output('done');
 ```
 
-### Console::output($text, $raw = false)
+| Code | Text | Bold text | Background |
+| --- | --- | --- | --- |
+| `%k` `%K` `%0` | black | dark grey | black |
+| `%r` `%R` `%1` | red | bold red | red |
+| `%g` `%G` `%2` | green | bold green | green |
+| `%y` `%Y` `%3` | yellow | bold yellow | yellow |
+| `%b` `%B` `%4` | blue | bold blue | blue |
+| `%m` `%M` `%5` | magenta | bold magenta | magenta |
+| `%p` `%P` | magenta (purple) | | |
+| `%c` `%C` `%6` | cyan | bold cyan | cyan |
+| `%w` `%W` `%7` | white | bold white | white |
+| `%F` | blinking | | |
+| `%U` | underline | | |
+| `%8` | reverse | | |
+| `%_` `%9` | bold | | |
+| `%n` | reset | | |
+| `%%` | a single `%` | | |
 
-The same as `Console::stdout` except it automatically appends a `PHP_EOL`.
+`colorize()` applies that table. `decolorize()` and `strip()` remove the codes. `color()` builds one ANSI code from a foreground, style, and background. A `null` color or style is skipped. The foreground `reset` returns the reset code.
 
-### Console::stderr($text, $raw = false)
+## Input
 
-Behaves like `Console::stdout` except it's for STDERR.
+`stdin()` reads one line and trims `PHP_EOL` unless `$raw` is `true`. It returns `null` when no string was read. `input()` prints an optional prompt and then calls `stdin()`.
 
-### Console::error($text, $raw = false)
+## Prompts
 
-The same as `Console::stderr` except it automatically appends a `PHP_EOL`.
+`prompt()` keeps asking until the input matches the options. `required` demands a non-empty value. `default` is used when the input is empty, and then `required` is not enforced. `pattern` is a regular expression. `validator` is a callable that returns `true` or `false`. `error` is the message printed when the check fails.
 
-### Console::prompt($text, $options)
-
-This function prompts the user for input. Several options are available:
-
-- `required`: True if input is necessary, false otherwise.
-- `default`: If the user does not provide an input, this is the default value.
-- `pattern`: Regular expression pattern to match.
-- `validator`: Callable to validate input. Must return `true` or `false`.
-- `error`: Default error message.
-
-If an input error occurs, the prompt will repeat and will keep asking the user
-for input until it satisfies all the requirements in the `$options` array. Note
-that if you supply a `default` option, `required` is not enforced.
-
-```php
-<?php
-$db_host = Console::prompt('database host', ['default' => 'localhost']);
-```
-
-If you provide your own validator callable, you can pass a custom error message
-to the second parameter:
+A validator can set its own message through the second parameter. That parameter has to be a reference.
 
 ```php
-<?php
+use TiMMiT\Console;
+
+$host = Console::prompt('database host', ['default' => 'localhost']);
+
 $file = Console::prompt('File', [
     'required' => true,
-    'validator' => function($input, &$error = null) {
+    'validator' => function (string $input, ?string &$error = null): bool {
         if (is_readable($input)) {
             return true;
-        } else {
-            $error = 'Path given is not a readable file';
-            return false;
         }
-    }
+        $error = 'Path given is not a readable file';
+        return false;
+    },
 ]);
 ```
 
-Note that for this to work, the second parameter must be declared a reference.
-
-### Console::confirm($text)
-
-Asks the user for a simple y/n answer. The answer can be `'y'`, `'n'`, `'Y'`, or
-`'N'`. Returns either `true` or `false`.
+`confirm()` accepts `y`, `n`, `Y`, and `N`, and returns a bool.
 
 ```php
-<?php
 $sure = Console::confirm('are you sure?');
 ```
 
-### Console::select($text, $options)
-
-Asks the user to choose from a selection of options. The `$options` array is a
-key-value pairs of input and explanation. The `'?'` input option is appended
-automatically and it serves as the help option showing all other options along
-with their respective explanations.
+`select()` asks for one key. `?` is added automatically and prints the explanations.
 
 ```php
-<?php
-$opt = Console::select('apply this patch?',
-    ['y' => 'yes', 'n' => 'no', 'a' => 'all']
-);
+$opt = Console::select('apply this patch?', [
+    'y' => 'yes',
+    'n' => 'no',
+    'a' => 'all',
+]);
 ```
 
-### Console::work(callable $callable)
+## Result line
 
-Forks another process to run `$callable` in the background while showing status
-updates to the standard output. By default the status update is a simple spinner
-which will stop once the `$callable` returns. By providing `$callable` with a
-`$socket` parameter, the status update is whatever is sent from the background
-process to the foreground process using the `socket_write()` function:
+`outputResultTable()` prints one padded line. The status `OK`, `FAILED`, or `SKIP` selects green, red, or yellow.
 
 ```php
-<?php
-Console::stdout('Working ... ');
-Console::work(function($socket) { // $socket is optional, defaults to a spinner
-    $n = 100;
-    for ($i = 1; $i <= $n; $i++) {
-        // do whatever it is you need to do
-        socket_write($socket, "[$i/$n]\n");
-        sleep(1); // sleep is good for you
-    }
-});
-Console::stdout("%g[DONE]%n\n");
+use TiMMiT\Console;
+
+Console::outputResultTable('OK', 'sync', 'items', '12 written');
 ```
 
-Messages sent to the foreground process needs to end with a `"\n"` character.
-
-### Text color and style specifiers
-
-You can use text color and style specifiers in the format of `%x` where `x` is
-the specifier:
-
-```php
-<?php
-Console::output('this is %rcolored%n and %Bstyled%n');
-```
-
-The `%n` specifier normalizes the color and style of the text to that of the
-shell's defaults. This specifier is taken from PEAR's Console_Color package.
-To print a percentage symbol, simply put two `%` characters. The following is
-the full set of specifiers:
-
-```
-            text      text            background
-------------------------------------------------
-%k %K %0    black     dark grey       black
-%r %R %1    red       bold red        red
-%g %G %2    green     bold green      green
-%y %Y %3    yellow    bold yellow     yellow
-%b %B %4    blue      bold blue       blue
-%m %M %5    magenta   bold magenta    magenta
-%p %P       magenta (think: purple)
-%c %C %6    cyan      bold cyan       cyan
-%w %W %7    white     bold white      white
-
-%F     Blinking, Flashing
-%U     Underline
-%8     Reverse
-%_,%9  Bold
-
-%n     Resets the color
-%%     A single %
-```
-
-You can use these specifiers with methods that takes a string and outputs it.
-
-## Acknowledgments
-
-The text color and style specifiers are taken entirely from PEAR's Console_Color
-class by Stefan Walk. The Daemon class is heavily inspired from Andy Thompson's
-blog post on [daemonizing a PHP CLI script on a POSIX system][post].
+The widths default to 8, 20, 25, and 15. Override them with `lengthStatus`, `lengthLabel`, `lengthSecondaryLabel`, and `lengthResultLabel`. Override the status letters with `statusColorOK`, `statusColorFailed`, and `statusColorSkip`.
 
 ## License
 
-[MIT]
+MIT.
 
-## Credits 
+## Credits
 
-- Nofriandi Ramenta <nramenta@gmail.com>: autor of original source code (you 
-    can found it [here][clio])
-
-[Composer]: http://getcomposer.org/
-[MIT]: http://en.wikipedia.org/wiki/MIT_License
-[post]: http://andytson.com/blog/2010/05/daemonising-a-php-cli-script-on-a-posix-system/
-[clio]: https://github.com/nramenta/clio
-
+- Nofriandi Ramenta, author of the original [clio](https://github.com/nramenta/clio) source
+- Stefan Walk, author of PEAR Console_Color, the source of the color table
+- Tim Schoondergang
